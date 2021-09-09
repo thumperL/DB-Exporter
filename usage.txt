@@ -1,0 +1,11 @@
+If the database is not too big, use below for a full run
+https://URL/DB_Exporter/data_excel_export.php
+
+If the database is big, use below to do batch run
+    1- run below to get list of tables
+    https://URL/DB_Exporter/data_excel_export_entry_3tbl.php?first_run=true&start_tbl=tables&batch_size=3
+
+    2- open another tab, run the one below, replace the first table name, and batch size, if there's a big table, take longer than 1 min to run, reduce batch size, default is 3
+    https://URL/DB_Exporter/data_excel_export_entry_3tbl.php?start_tbl=TABLE_NAME_HERE&batch_size=10
+
+    3- Run in batch, then select the sheets -> move/copy -> to the main sheet, select (at the end)
