@@ -1,6 +1,8 @@
 # Database to Spreadsheet Exporter
 
-This script was built to export database for PHP-back sites to export the data into excel spreadsheet.  ~~This script used 'PHPExcel' (https://github.com/PHPOffice/PHPExcel).~~The script is now using 'PHP Spreadsheet', and has been tested with PHP v8.0.
+This script was built to export database for PHP-back sites to export the data into excel spreadsheet.
+
+~~This script used 'PHPExcel' (https://github.com/PHPOffice/PHPExcel).~~The script is now using 'PHP Spreadsheet', and has been tested with PHP v8.0.
 
 The problem I was facing was that I need to export a few DBs into excel spreadsheet, and each of them has around 60gbs and around 30 tables.  Normal db dumps with GUIs to CSVs just won't work.
 
