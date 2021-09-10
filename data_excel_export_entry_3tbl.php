@@ -49,6 +49,13 @@ if (isset($_REQUEST['batch_size'])) {
     $batch_size = (int)(3 - 1);
 }
 
+/** Include PHPExcel */
+require 'vendor/autoload.php';
+
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+
 $ittr_count = 0;
 $table_reached = false;
 while ($table_row = $tables_result->fetch_assoc()) {
@@ -123,62 +130,57 @@ function table_data_to_arr($conn, $sTablename = '')
 
 function create_xls($dbname, $data, $table_name = '')
 {
-    /** Include PHPExcel */
-    require_once dirname(__FILE__) . '/Classes/PHPExcel.php';
-
     // Create new PHPExcel object
-    $objPHPExcel = new PHPExcel();
+    $spreadsheet = new Spreadsheet();
 
     // Set document properties
-    $objPHPExcel->getProperties()->setCreator("Shaun Lin")->setTitle("$dbname");
+    $spreadsheet->getProperties()->setTitle("$dbname");
 
     // Used to set sheet index
     $sheet_count = 0;
     foreach ($data as $ea_tbl_name => $ea_tbl_data) {
+        // Used to set sheet index
+        $table_name = $ea_tbl_name;
+
         // Add new sheet
-        $objWorkSheet = $objPHPExcel->createSheet($sheet_count);
+        $objWorkSheet = $spreadsheet->createSheet($sheet_count);
 
         // Set all to text, avoid weird data type display
         $objWorkSheet->getStyle('A1')
             ->getNumberFormat()
             ->setFormatCode(
-                PHPExcel_Style_NumberFormat::FORMAT_TEXT
+                \PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_TEXT
             );
 
         // Set first row bold
         $objWorkSheet->getStyle('1:1')->getFont()->setBold(true);
+        $objWorkSheet->getStyle('2:2')->getFont()->setBold(true);
+        $objWorkSheet->getStyle('3:3')->getFont()->setBold(true);
+
+        // Add Table Name to first row
+        $objWorkSheet->setCellValue('A1', 'Table Name: '.$table_name);
 
         // Add data from inner array
-        $objWorkSheet->fromArray($ea_tbl_data, NULL, 'A1');
+        $objWorkSheet->fromArray($ea_tbl_data, NULL, 'A3');
 
         // Set sheeet title
-        $objWorkSheet->setTitle("$ea_tbl_name");
+        $sheet_name = substr($table_name, strlen($table_name) - 31, 31);
+        $objWorkSheet->setTitle("$sheet_name");
 
         $sheet_count += 1;
     }
     
     // Remove the last empty sheet created
-    $objPHPExcel->removeSheetByIndex($sheet_count);
-    
-    // Redirect output to a client’s web browser (Excel5)
-    header('Content-Type: application/vnd.ms-excel');
-    
-    if ($table_name == '') {
-        header('Content-Disposition: attachment;filename="' . $dbname . '.xls"');
-    } else {
-        header('Content-Disposition: attachment;filename="' . $dbname . '___' . $table_name . '.xls"');
-    }
+    $spreadsheet->removeSheetByIndex($sheet_count);    
+    $filename = sprintf('%s_%s', $dbname, date('Y-m-d-H-i'));
+    header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    header('Content-Disposition: attachment;filename="'.urlencode($filename).'.xlsx"');
     header('Cache-Control: max-age=0');
-    // If you're serving to IE 9, then the following may be needed
-    header('Cache-Control: max-age=1');
-
-    // If you're serving to IE over SSL, then the following may be needed
     header('Expires: Mon, 26 Jul 1997 05:00:00 GMT'); // Date in the past
     header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT'); // always modified
     header('Cache-Control: cache, must-revalidate'); // HTTP/1.1
     header('Pragma: public'); // HTTP/1.0
-
-    $objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel5');
-    $objWriter->save('php://output');
+    $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
+    $writer->save('php://output');
     exit;
 }
